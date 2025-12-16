@@ -1,0 +1,706 @@
+
+<div class="min-h-screen flex flex-col bg-gray-50 text-gray-800">
+  <!-- Header -->
+  <header class="bg-white border-b border-gray-200 shadow-sm z-20 relative">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <!-- Logo -->
+        <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow">M</div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight text-emerald-800">TEFA SMKS Muhammadiyah Cangkringan</h1>
+          <p class="text-xs text-gray-500 tracking-wide">Religius | Unggul | Kompeten</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-4">
+        @if (ws.currentUser()) {
+          <div class="relative">
+             <button (click)="toggleNotif()" class="relative p-2 hover:bg-gray-100 rounded-full transition text-gray-600">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+               </svg>
+               @if (ws.unreadCount() > 0) {
+                 <span class="absolute top-1 right-1 h-3 w-3 bg-red-500 rounded-full border border-white"></span>
+               }
+             </button>
+             <!-- Notification Dropdown -->
+             @if (showNotifDropdown()) {
+               <div class="absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-xl z-50 overflow-hidden border border-gray-200">
+                  <div class="bg-gray-50 px-4 py-2 text-sm font-bold border-b text-gray-600">Notifikasi</div>
+                  <ul class="max-h-64 overflow-y-auto">
+                    @for (n of ws.myNotifications(); track n.id) {
+                      <li class="px-4 py-3 border-b hover:bg-gray-50 text-sm transition" [class.bg-blue-50]="!n.read">
+                        <div class="flex gap-2">
+                           <div class="mt-1 h-2 w-2 rounded-full flex-shrink-0" [class.bg-blue-500]="!n.read" [class.bg-transparent]="n.read"></div>
+                           <div>
+                              <p class="mb-1 font-medium text-gray-800">{{ n.message }}</p>
+                              <p class="text-xs text-gray-400">{{ n.timestamp | date:'shortTime' }}</p>
+                           </div>
+                        </div>
+                      </li>
+                    }
+                    @if (ws.myNotifications().length === 0) {
+                      <li class="px-4 py-3 text-center text-sm text-gray-500 italic">Belum ada notifikasi</li>
+                    }
+                  </ul>
+               </div>
+             }
+          </div>
+
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-bold text-gray-700">{{ ws.currentUser()?.name }}</div>
+            <div class="text-xs text-emerald-600 uppercase font-semibold">{{ ws.currentUser()?.role }}</div>
+          </div>
+          <button (click)="ws.logout(); currentView.set('landing')" class="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm transition text-gray-700 font-medium">
+            Logout
+          </button>
+        } @else {
+          <button (click)="handleLogin('admin')" class="text-xs text-gray-500 hover:text-emerald-600 underline">Login Admin</button>
+        }
+      </div>
+    </div>
+  </header>
+
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- Sidebar (Light Theme) -->
+    @if (showSidebar()) {
+      <aside class="w-64 bg-white border-r border-gray-200 flex-shrink-0 hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div class="p-6">
+          <h3 class="text-gray-400 text-xs font-bold uppercase mb-4 tracking-wider">Menu Utama</h3>
+          <nav class="space-y-2">
+            <button (click)="currentView.set('dashboard')" 
+              [class.bg-emerald-50]="currentView() === 'dashboard'"
+              [class.text-emerald-700]="currentView() === 'dashboard'"
+              class="w-full text-left px-4 py-2.5 rounded-lg hover:bg-gray-50 text-gray-600 transition flex items-center font-medium">
+              <span>Dashboard & Service</span>
+            </button>
+            <button (click)="currentView.set('inventory')" 
+              [class.bg-emerald-50]="currentView() === 'inventory'"
+              [class.text-emerald-700]="currentView() === 'inventory'"
+              class="w-full text-left px-4 py-2.5 rounded-lg hover:bg-gray-50 text-gray-600 transition flex items-center font-medium">
+              <span>Inventory & Stok</span>
+            </button>
+            <button (click)="currentView.set('pos')" 
+              [class.bg-emerald-50]="currentView() === 'pos'"
+              [class.text-emerald-700]="currentView() === 'pos'"
+              class="w-full text-left px-4 py-2.5 rounded-lg hover:bg-gray-50 text-gray-600 transition flex items-center font-medium">
+              <span>POS & Pembayaran</span>
+            </button>
+             <button (click)="currentView.set('history')" 
+              [class.bg-emerald-50]="currentView() === 'history'"
+              [class.text-emerald-700]="currentView() === 'history'"
+              class="w-full text-left px-4 py-2.5 rounded-lg hover:bg-gray-50 text-gray-600 transition flex items-center font-medium">
+              <span>Riwayat Service</span>
+            </button>
+          </nav>
+        </div>
+        
+        <div class="mt-auto p-4 border-t border-gray-100">
+          <div class="bg-gray-50 rounded p-3 text-xs text-center text-gray-400">
+            &copy; 2024 SMKS Muh Cangkringan<br>System v1.2 (Light)
+          </div>
+        </div>
+      </aside>
+    }
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 md:p-8 relative">
+      
+      <!-- LANDING PAGE (PUBLIC) -->
+      @if (currentView() === 'landing') {
+        <div class="max-w-4xl mx-auto animate-fade-in space-y-12">
+          
+          <!-- Hero / Tracking -->
+          <div class="text-center">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">Pelacakan Status Service</h2>
+            <p class="text-gray-600 max-w-lg mx-auto mb-8">Masukkan Nomor Plat atau Kode Unik Service Anda untuk mengetahui status pengerjaan secara realtime.</p>
+            
+            <div class="bg-white rounded-xl shadow-lg p-2 max-w-2xl mx-auto border border-gray-100 flex flex-col md:flex-row gap-2">
+              <input type="text" [(ngModel)]="trackInput" placeholder="Contoh: AB 1234 XY" 
+                class="flex-1 rounded-lg px-4 py-3 focus:outline-none focus:bg-gray-50 text-lg uppercase transition text-gray-700 placeholder-gray-400">
+              <button (click)="doTrack()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition transform hover:-translate-y-0.5">
+                Lacak Status
+              </button>
+            </div>
+             @if (trackError()) {
+              <div class="mt-4 p-3 bg-red-50 text-red-700 rounded border border-red-200 max-w-xl mx-auto">
+                {{ trackError() }}
+              </div>
+            }
+          </div>
+
+          <!-- Tracking Result -->
+          @if (trackResult(); as res) {
+            <div class="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-200 animate-fade-in max-w-3xl mx-auto">
+              <div class="bg-gray-800 text-white p-6 flex justify-between items-center">
+                <div>
+                   <span class="block text-xs opacity-70 uppercase tracking-widest">Plat Nomor</span>
+                   <span class="font-mono text-3xl font-bold">{{ res.plateNumber }}</span>
+                </div>
+                <div class="text-right">
+                   <span class="block text-xs opacity-70 uppercase tracking-widest">Kode Service</span>
+                   <span class="bg-emerald-500 text-sm px-3 py-1 rounded font-bold">{{ res.uniqueCode }}</span>
+                </div>
+              </div>
+              <div class="p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <p class="text-sm text-gray-500 uppercase font-bold tracking-wide">Pemilik</p>
+                    <p class="font-semibold text-xl text-gray-800">{{ res.ownerName }}</p>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500 uppercase font-bold tracking-wide">Kendaraan</p>
+                    <p class="font-semibold text-xl text-gray-800">{{ res.vehicleType }} <span class="text-sm text-gray-400 font-normal">({{ res.dept }})</span></p>
+                  </div>
+                  <div class="md:col-span-2">
+                    <p class="text-sm text-gray-500 uppercase font-bold tracking-wide mb-3">Progress Pengerjaan</p>
+                    <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
+                      <div class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-4 rounded-full transition-all duration-1000 relative"
+                           [style.width]="res.status === 'completed' ? '100%' : res.status === 'ready' ? '90%' : res.status === 'washing' ? '70%' : res.status === 'repairing' ? '50%' : res.status === 'diagnosing' ? '25%' : '10%'">
+                            <div class="absolute inset-0 bg-white opacity-20 animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-400 mt-2 uppercase font-semibold tracking-wider">
+                      <span>Daftar</span>
+                      <span>Analisa</span>
+                      <span>Perbaikan</span>
+                      <span>Selesai</span>
+                    </div>
+                    <p class="mt-4 text-emerald-700 font-bold text-lg capitalize flex items-center gap-2">
+                       <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                       {{ res.status }}
+                    </p>
+                  </div>
+                  <div class="md:col-span-2 bg-blue-50 p-5 rounded-xl border border-blue-100 flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <div>
+                      <p class="text-sm text-blue-800 font-bold mb-1">Catatan Mekanik / Info Pengambilan:</p>
+                      <p class="text-gray-700">{{ res.pickupNote }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+          
+          <!-- Booking / Service Registration -->
+          <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+             <div class="p-6 border-b border-gray-100 bg-gray-50">
+                <h3 class="font-bold text-xl text-gray-800">Booking Service / Pendaftaran Mandiri</h3>
+                <p class="text-gray-500 text-sm">Pilih mekanik favorit Anda (jika tersedia) atau biarkan kosong untuk antrian umum.</p>
+             </div>
+             <div class="p-6 md:p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                   <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Pemilik</label>
+                      <input [(ngModel)]="bookingForm.owner" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="Nama Lengkap">
+                   </div>
+                   <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Nomor Plat</label>
+                      <input [(ngModel)]="bookingForm.plate" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition uppercase" placeholder="AB xxxx XX">
+                   </div>
+                   <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Tipe Kendaraan</label>
+                      <input [(ngModel)]="bookingForm.vehicleType" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="Contoh: Avanza / Beat">
+                   </div>
+                   <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Mekanik (Opsional)</label>
+                      <select [(ngModel)]="bookingForm.mechanicId" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition bg-white">
+                         <option value="">-- Pilih Mekanik Tersedia --</option>
+                         @for (m of ws.availableMechanics(); track m.id) {
+                            <option [value]="m.id">{{ m.name }} (Available)</option>
+                         }
+                         @if (ws.availableMechanics().length === 0) {
+                            <option disabled>Semua mekanik sibuk</option>
+                         }
+                      </select>
+                   </div>
+                   <div class="md:col-span-2">
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Keluhan / Permintaan Service</label>
+                      <textarea [(ngModel)]="bookingForm.complaint" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition" placeholder="Jelaskan kerusakan atau jenis service..."></textarea>
+                   </div>
+                </div>
+                <div class="flex justify-end">
+                   <button (click)="submitBooking()" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 px-10 rounded-lg shadow transition">
+                      Daftar Booking
+                   </button>
+                </div>
+             </div>
+          </div>
+
+          <!-- Simulation Role Switcher for Demo -->
+          <div class="mt-20 border-t pt-8 text-center pb-8">
+            <p class="text-xs text-gray-400 mb-4 font-bold tracking-widest uppercase">Akses Pegawai (Demo Mode)</p>
+            <div class="flex justify-center flex-wrap gap-3">
+              <button (click)="handleLogin('admin')" class="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300 text-gray-700 font-medium">Admin</button>
+              <button (click)="handleLogin('sa')" class="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300 text-gray-700 font-medium">Frontman/SA</button>
+              <button (click)="handleLogin('mechanic')" class="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300 text-gray-700 font-medium">Mekanik</button>
+              <button (click)="handleLogin('cashier')" class="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300 text-gray-700 font-medium">Kasir</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- DASHBOARD & SERVICE QUEUE -->
+      @if (currentView() === 'dashboard') {
+        <div class="space-y-6">
+          
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+              <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Antrian</div>
+              <div class="text-3xl font-bold text-yellow-600">{{ ws.stats().pending }}</div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+              <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Dikerjakan</div>
+              <div class="text-3xl font-bold text-blue-600">{{ ws.stats().inProgress }}</div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+              <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Selesai</div>
+              <div class="text-3xl font-bold text-green-600">{{ ws.stats().ready }}</div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
+              <div class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-1">Total Hari Ini</div>
+              <div class="text-3xl font-bold text-gray-700">{{ ws.services().length }}</div>
+            </div>
+          </div>
+
+          <!-- Service Advisor Input (SA Role) -->
+          @if (activeRole() === 'sa' || activeRole() === 'admin') {
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+              <h3 class="font-bold text-lg mb-4 text-gray-800 border-b pb-2">Pendaftaran Service Baru</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <input [(ngModel)]="saForm.owner" placeholder="Nama Pemilik" class="border rounded px-3 py-2 text-sm">
+                <input [(ngModel)]="saForm.plate" placeholder="Plat Nomor" class="border rounded px-3 py-2 text-sm uppercase">
+                <input [(ngModel)]="saForm.type" placeholder="Tipe Kendaraan" class="border rounded px-3 py-2 text-sm">
+                <select [(ngModel)]="saForm.dept" class="border rounded px-3 py-2 text-sm bg-white">
+                  <option value="TKRO">TKRO (Mobil)</option>
+                  <option value="TBSM">TBSM (Motor)</option>
+                </select>
+                <button (click)="submitService()" class="bg-sky-600 text-white rounded px-4 py-2 hover:bg-sky-700 font-bold shadow">
+                  + Daftar
+                </button>
+              </div>
+              <div class="mt-3">
+                <textarea [(ngModel)]="saForm.complaint" placeholder="Keluhan / Kerusakan" class="w-full border rounded px-3 py-2 text-sm" rows="2"></textarea>
+              </div>
+            </div>
+          }
+
+          <!-- Mechanic View & AI Assistant -->
+          @if (activeRole() === 'mechanic' || activeRole() === 'admin') {
+             <div class="bg-indigo-50 rounded-xl shadow-sm border border-indigo-100 p-6">
+                <h3 class="font-bold text-indigo-800 flex items-center gap-2 mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  Bengkel Cerdas (AI Assistant)
+                </h3>
+                <div class="flex gap-2">
+                  <input [(ngModel)]="aiPrompt" placeholder="Tulis gejala kerusakan untuk analisa AI..." class="flex-1 border border-indigo-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+                  <button (click)="askAI()" [disabled]="aiLoading()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50">
+                    {{ aiLoading() ? 'Analisa...' : 'Tanya AI' }}
+                  </button>
+                </div>
+                @if (aiResponse()) {
+                  <div class="mt-4 bg-white p-4 rounded-lg border border-indigo-100 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap shadow-sm">
+                    {{ aiResponse() }}
+                  </div>
+                }
+             </div>
+          }
+
+          <!-- Active Services List -->
+          <div class="flex flex-col lg:flex-row gap-6">
+             <!-- Service Table -->
+             <div class="flex-1 bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100">
+                <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
+                   <h3 class="font-bold text-gray-700">Daftar Antrian & Pengerjaan</h3>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-sm">
+                      <thead class="bg-gray-100 text-gray-600 uppercase text-xs">
+                        <tr>
+                          <th class="px-6 py-3">ID / Plat</th>
+                          <th class="px-6 py-3">Kendaraan</th>
+                          <th class="px-6 py-3">Keluhan</th>
+                          <th class="px-6 py-3">Mekanik</th>
+                          <th class="px-6 py-3">Status</th>
+                          <th class="px-6 py-3">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-gray-200">
+                        @for (s of ws.services(); track s.id) {
+                          <tr class="hover:bg-gray-50 transition">
+                            <td class="px-6 py-4 font-medium">
+                              <div class="text-gray-900">{{ s.plateNumber }}</div>
+                              <div class="text-xs text-gray-500">{{ s.uniqueCode }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                              <div>{{ s.vehicleType }}</div>
+                              <span class="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-700">{{ s.dept }}</span>
+                            </td>
+                            <td class="px-6 py-4 text-gray-600 max-w-xs truncate" title="{{ s.complaint }}">
+                              {{ s.complaint }}
+                            </td>
+                            <td class="px-6 py-4">
+                              @if (s.mechanicName) {
+                                <span class="text-sky-700 font-semibold">{{ s.mechanicName }}</span>
+                              } @else {
+                                <span class="text-gray-400 italic">Belum ada</span>
+                              }
+                            </td>
+                            <td class="px-6 py-4">
+                              <span [class.bg-yellow-100]="s.status === 'pending'" 
+                                    [class.text-yellow-800]="s.status === 'pending'"
+                                    [class.bg-blue-100]="['diagnosing','repairing'].includes(s.status)"
+                                    [class.text-blue-800]="['diagnosing','repairing'].includes(s.status)"
+                                    [class.bg-green-100]="s.status === 'ready' || s.status === 'completed'"
+                                    [class.text-green-800]="s.status === 'ready' || s.status === 'completed'"
+                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full uppercase">
+                                {{ s.status }}
+                              </span>
+                            </td>
+                            <td class="px-6 py-4">
+                              @if (s.status === 'pending' && (activeRole() === 'sa' || activeRole() === 'admin')) {
+                                <div class="relative group inline-block">
+                                  <button class="text-blue-600 hover:text-blue-900 font-bold text-xs bg-blue-50 px-2 py-1 rounded border border-blue-200">Pilih Mekanik</button>
+                                  <div class="absolute right-0 top-full mt-2 w-48 bg-white border shadow-xl rounded-lg hidden group-hover:block z-50">
+                                      @for (m of ws.availableMechanics(); track m.id) {
+                                        <button (click)="ws.assignMechanic(s.id, m.id)" class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">
+                                          {{ m.name }}
+                                        </button>
+                                      }
+                                      @if (ws.availableMechanics().length === 0) {
+                                        <div class="px-4 py-2 text-xs text-red-500">Semua mekanik sibuk</div>
+                                      }
+                                  </div>
+                                </div>
+                              }
+                              
+                              @if (['diagnosing','repairing'].includes(s.status) && (activeRole() === 'mechanic' || activeRole() === 'admin')) {
+                                <div class="flex space-x-2">
+                                  <button (click)="ws.updateStatus(s.id, 'ready', 'Kendaraan siap diambil')" class="text-green-600 hover:text-green-900 font-bold border border-green-200 px-2 py-1 rounded bg-green-50 text-xs">
+                                    Selesai
+                                  </button>
+                                </div>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                  </table>
+                </div>
+             </div>
+             
+             <!-- Available Mechanics Filter View -->
+             <div class="w-full lg:w-64 bg-white rounded-xl shadow-sm h-fit border border-gray-100">
+                <div class="p-4 border-b bg-gray-50">
+                   <h4 class="font-bold text-gray-700">Mekanik Tersedia</h4>
+                </div>
+                <ul class="divide-y">
+                   @for (m of ws.availableMechanics(); track m.id) {
+                      <li class="p-4 flex items-center space-x-3">
+                         <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-emerald-100"></div>
+                         <div>
+                            <p class="text-sm font-semibold text-gray-800">{{ m.name }}</p>
+                            <p class="text-xs text-emerald-600 font-medium">Siap Menerima</p>
+                         </div>
+                      </li>
+                   }
+                   @if (ws.availableMechanics().length === 0) {
+                      <li class="p-4 text-sm text-gray-500 italic text-center">Tidak ada mekanik kosong.</li>
+                   }
+                </ul>
+             </div>
+          </div>
+        </div>
+      }
+
+      <!-- INVENTORY -->
+      @if (currentView() === 'inventory') {
+        <div class="space-y-6 animate-fade-in">
+          <div class="flex justify-between items-center">
+             <h2 class="text-2xl font-bold text-gray-800">Manajemen Inventaris</h2>
+             <button (click)="openAddInv()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg shadow hover:bg-emerald-700 flex items-center gap-2 font-medium transition">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+               Tambah Barang
+             </button>
+          </div>
+          
+          <!-- Add/Edit Form -->
+          @if (showInvForm()) {
+             <div class="bg-white p-6 rounded-xl shadow-md border border-emerald-100 animate-fade-in">
+                <h3 class="font-bold text-lg mb-4 text-emerald-800">{{ editingItem() ? 'Edit Barang' : 'Tambah Barang Baru' }}</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                   <input [(ngModel)]="invForm.name" placeholder="Nama Barang" class="border rounded px-3 py-2">
+                   <select [(ngModel)]="invForm.dept" class="border rounded px-3 py-2 bg-white">
+                     <option value="TKRO">TKRO</option>
+                     <option value="TBSM">TBSM</option>
+                     <option value="FB">F&B</option>
+                   </select>
+                   <select [(ngModel)]="invForm.category" class="border rounded px-3 py-2 bg-white">
+                     <option value="Sparepart">Sparepart</option>
+                     <option value="Oil">Oli/Cairan</option>
+                     <option value="Snack">Makanan</option>
+                     <option value="Drink">Minuman</option>
+                   </select>
+                   <input [(ngModel)]="invForm.stock" type="number" placeholder="Stok" class="border rounded px-3 py-2">
+                   <input [(ngModel)]="invForm.price" type="number" placeholder="Harga" class="border rounded px-3 py-2">
+                </div>
+                <div class="mt-4 flex space-x-3 justify-end">
+                   <button (click)="showInvForm.set(false)" class="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 transition">Batal</button>
+                   <button (click)="saveInventory()" class="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-700 shadow transition">Simpan</button>
+                </div>
+             </div>
+          }
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- TKRO -->
+            <div class="border rounded-xl overflow-hidden bg-white shadow-sm border-gray-100">
+              <div class="bg-red-50 p-4 border-b border-red-100 font-bold text-red-800 flex justify-between items-center">
+                 <span>TKRO (Mobil)</span>
+                 <span class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">Sparepart</span>
+              </div>
+              <ul class="divide-y divide-gray-50">
+                @for (item of ws.inventory(); track item.id) {
+                  @if (item.dept === 'TKRO') {
+                    <li class="p-4 flex justify-between items-center text-sm group hover:bg-gray-50 transition">
+                      <div>
+                        <div class="font-medium text-gray-800">{{ item.name }}</div>
+                        <div class="text-xs text-gray-400">{{ item.category }}</div>
+                      </div>
+                      <div class="text-right flex items-center gap-3">
+                        <div>
+                          <div class="font-mono font-bold text-gray-700">{{ item.stock }} pcs</div>
+                          <div class="text-xs font-semibold text-emerald-600">Rp {{ item.price.toLocaleString('id-ID') }}</div>
+                        </div>
+                        <div class="hidden group-hover:flex gap-1">
+                          <button (click)="openEditInv(item)" class="text-blue-500 hover:bg-blue-50 p-1.5 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                          <button (click)="deleteInventory(item.id)" class="text-red-500 hover:bg-red-50 p-1.5 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                        </div>
+                      </div>
+                    </li>
+                  }
+                }
+              </ul>
+            </div>
+
+            <!-- TBSM -->
+            <div class="border rounded-xl overflow-hidden bg-white shadow-sm border-gray-100">
+              <div class="bg-orange-50 p-4 border-b border-orange-100 font-bold text-orange-800 flex justify-between items-center">
+                 <span>TBSM (Motor)</span>
+                 <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">Sparepart</span>
+              </div>
+              <ul class="divide-y divide-gray-50">
+                @for (item of ws.inventory(); track item.id) {
+                  @if (item.dept === 'TBSM') {
+                    <li class="p-4 flex justify-between items-center text-sm group hover:bg-gray-50 transition">
+                      <div>
+                        <div class="font-medium text-gray-800">{{ item.name }}</div>
+                        <div class="text-xs text-gray-400">{{ item.category }}</div>
+                      </div>
+                      <div class="text-right flex items-center gap-3">
+                        <div>
+                           <div class="font-mono font-bold text-gray-700">{{ item.stock }} pcs</div>
+                           <div class="text-xs font-semibold text-emerald-600">Rp {{ item.price.toLocaleString('id-ID') }}</div>
+                        </div>
+                        <div class="hidden group-hover:flex gap-1">
+                           <button (click)="openEditInv(item)" class="text-blue-500 hover:bg-blue-50 p-1.5 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                           <button (click)="deleteInventory(item.id)" class="text-red-500 hover:bg-red-50 p-1.5 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                         </div>
+                      </div>
+                    </li>
+                  }
+                }
+              </ul>
+            </div>
+
+            <!-- F&B -->
+            <div class="border rounded-xl overflow-hidden bg-white shadow-sm border-gray-100">
+              <div class="bg-purple-50 p-4 border-b border-purple-100 font-bold text-purple-800 flex justify-between items-center">
+                 <span>Cafetaria (F&B)</span>
+                 <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">Snack & Drink</span>
+              </div>
+              <ul class="divide-y divide-gray-50">
+                @for (item of ws.inventory(); track item.id) {
+                  @if (item.dept === 'FB') {
+                    <li class="p-4 flex justify-between items-center text-sm group hover:bg-gray-50 transition">
+                      <div>
+                        <div class="font-medium text-gray-800">{{ item.name }}</div>
+                        <div class="text-xs text-gray-400">{{ item.category }}</div>
+                      </div>
+                      <div class="text-right flex items-center gap-3">
+                         <div>
+                            <div class="font-mono font-bold text-gray-700">{{ item.stock }} pcs</div>
+                            <div class="text-xs font-semibold text-emerald-600">Rp {{ item.price.toLocaleString('id-ID') }}</div>
+                         </div>
+                         <div class="hidden group-hover:flex gap-1">
+                           <button (click)="openEditInv(item)" class="text-blue-500 hover:bg-blue-50 p-1.5 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></button>
+                           <button (click)="deleteInventory(item.id)" class="text-red-500 hover:bg-red-50 p-1.5 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                         </div>
+                      </div>
+                    </li>
+                  }
+                }
+              </ul>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- POS (Point of Sale) -->
+      @if (currentView() === 'pos') {
+        <div class="space-y-6 animate-fade-in h-[calc(100vh-140px)] flex flex-col">
+          <h2 class="text-2xl font-bold text-gray-800 flex-shrink-0">Kasir / Point of Sale</h2>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 overflow-hidden">
+             <!-- Product Grid -->
+             <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                <div class="p-4 bg-gray-50 border-b">
+                   <h3 class="font-bold text-gray-700">Pilih Barang (Ritel & F&B)</h3>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                   @for (item of ws.inventory(); track item.id) {
+                      <div (click)="addToCart(item)" class="border border-gray-100 rounded-lg p-3 hover:shadow-md cursor-pointer transition bg-white flex flex-col justify-between group">
+                         <div>
+                            <div class="text-xs text-gray-400 mb-1 font-medium">{{ item.dept }} / {{ item.category }}</div>
+                            <div class="font-bold text-gray-800 text-sm line-clamp-2 group-hover:text-emerald-700">{{ item.name }}</div>
+                         </div>
+                         <div class="mt-3">
+                            <div class="text-emerald-600 font-bold text-base">Rp {{ item.price.toLocaleString('id-ID') }}</div>
+                            <div class="text-xs text-gray-500 mt-1">Stok: {{ item.stock }}</div>
+                         </div>
+                      </div>
+                   }
+                </div>
+                
+                <!-- Separator for Service Payment -->
+                <div class="p-4 bg-gray-50 border-t">
+                   <h3 class="font-bold text-gray-700 mb-3">Pembayaran Service (Ready)</h3>
+                   <div class="flex gap-4 overflow-x-auto pb-2">
+                      @for (s of ws.services(); track s.id) {
+                         @if (s.status === 'ready') {
+                            <div class="min-w-[250px] bg-white p-4 rounded-lg border shadow-sm flex flex-col justify-between">
+                               <div>
+                                  <div class="font-bold text-gray-800">{{ s.plateNumber }}</div>
+                                  <div class="text-xs text-gray-500">{{ s.ownerName }}</div>
+                                  <div class="text-xs text-emerald-600 font-mono mt-1 bg-emerald-50 inline-block px-1 rounded">{{ s.uniqueCode }}</div>
+                               </div>
+                               <button (click)="printReceipt(s)" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded transition">
+                                  Proses Bayar Service
+                               </button>
+                            </div>
+                         }
+                      }
+                      @if (ws.stats().ready === 0) {
+                        <div class="text-gray-400 text-sm italic py-2">Tidak ada tagihan service yang siap dibayar.</div>
+                      }
+                   </div>
+                </div>
+             </div>
+
+             <!-- Cart -->
+             <div class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <div class="p-4 bg-gray-50 border-b border-gray-100">
+                   <h3 class="font-bold text-gray-700">Keranjang Belanja</h3>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                   @for (c of cart(); track c.item.id; let i = $index) {
+                      <div class="flex justify-between items-center border-b border-gray-50 pb-2">
+                         <div class="flex-1">
+                            <div class="text-sm font-semibold text-gray-800">{{ c.item.name }}</div>
+                            <div class="text-xs text-gray-500">
+                               {{ c.qty }} x {{ c.item.price.toLocaleString('id-ID') }}
+                            </div>
+                         </div>
+                         <div class="flex items-center gap-2">
+                            <span class="font-bold text-sm text-gray-700">Rp {{ (c.qty * c.item.price).toLocaleString('id-ID') }}</span>
+                            <button (click)="removeFromCart(i)" class="text-red-400 hover:text-red-600 p-1">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                         </div>
+                      </div>
+                   }
+                   @if (cart().length === 0) {
+                      <div class="text-center text-gray-400 py-10 flex flex-col items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        Keranjang Kosong
+                      </div>
+                   }
+                </div>
+                <div class="p-4 bg-gray-50 border-t border-gray-100">
+                   <div class="flex justify-between items-center mb-4">
+                      <span class="font-bold text-gray-600">Total</span>
+                      <span class="font-bold text-2xl text-emerald-700">Rp {{ cartTotal().toLocaleString('id-ID') }}</span>
+                   </div>
+                   <button (click)="checkoutPOS()" [disabled]="cart().length === 0" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow transition">
+                      Bayar Sekarang
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
+      }
+
+      <!-- HISTORY VIEW -->
+      @if (currentView() === 'history') {
+         <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in border border-gray-100">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Riwayat Service Kendaraan</h2>
+            
+            <div class="mb-6">
+               <div class="relative max-w-lg">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                     </svg>
+                  </div>
+                  <input [(ngModel)]="historySearch" type="text" placeholder="Cari Plat Nomor / Nama Pemilik / Kode..." 
+                         class="pl-10 block w-full border-gray-300 rounded-lg border py-2.5 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm">
+               </div>
+               <p class="mt-2 text-xs text-gray-500">Menampilkan hasil pencarian real-time dari database service.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+               <table class="w-full text-left text-sm">
+                  <thead class="bg-gray-50 text-gray-600 uppercase text-xs font-bold tracking-wider">
+                     <tr>
+                        <th class="px-6 py-3 border-b">Tanggal</th>
+                        <th class="px-6 py-3 border-b">Kode / Plat</th>
+                        <th class="px-6 py-3 border-b">Kendaraan</th>
+                        <th class="px-6 py-3 border-b">Keluhan</th>
+                        <th class="px-6 py-3 border-b">Status Terakhir</th>
+                     </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                     @for (s of filteredHistory(); track s.id) {
+                        <tr class="hover:bg-gray-50 transition">
+                           <td class="px-6 py-4 text-gray-500">{{ s.entryTime | date:'mediumDate' }}</td>
+                           <td class="px-6 py-4 font-medium">
+                              <div class="text-gray-800">{{ s.plateNumber }}</div>
+                              <div class="text-xs text-gray-400 font-mono">{{ s.uniqueCode }}</div>
+                           </td>
+                           <td class="px-6 py-4">{{ s.vehicleType }} <span class="text-xs text-gray-500 block">({{ s.ownerName }})</span></td>
+                           <td class="px-6 py-4 max-w-xs truncate text-gray-600">{{ s.complaint }}</td>
+                           <td class="px-6 py-4">
+                              <span [class.bg-green-100]="s.status === 'completed'" 
+                                    [class.text-green-800]="s.status === 'completed'"
+                                    class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full uppercase bg-gray-100 text-gray-800">
+                                 {{ s.status }}
+                              </span>
+                           </td>
+                        </tr>
+                     }
+                     @if (filteredHistory().length === 0 && historySearch()) {
+                        <tr>
+                           <td colspan="5" class="px-6 py-10 text-center text-gray-400 italic">Tidak ditemukan data yang cocok.</td>
+                        </tr>
+                     }
+                  </tbody>
+               </table>
+            </div>
+         </div>
+      }
+
+    </main>
+  </div>
+</div>
