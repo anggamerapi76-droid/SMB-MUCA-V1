@@ -54,7 +54,9 @@ export class AppComponent {
 
   // POS State
   cart = signal<{ item: InventoryItem; qty: number }[]>([]);
-  
+  posCategory = signal<'all' | 'sparepart' | 'oil' | 'mart' | 'service'>('all');
+  posSearch = signal('');
+
   // History State
   historySearch = signal('');
   
@@ -71,6 +73,45 @@ export class AppComponent {
   activeRole = computed(() => this.ws.currentUser()?.role || 'public');
   
   cartTotal = computed(() => this.cart().reduce((acc, curr) => acc + (curr.item.price * curr.qty), 0));
+
+  // Filtered POS Items
+  filteredPosItems = computed(() => {
+    const cat = this.posCategory();
+    const search = this.posSearch().toLowerCase();
+    
+    let items = this.ws.inventory();
+
+    // Filter by Category
+    if (cat === 'sparepart') {
+      items = items.filter(i => i.category === 'Sparepart');
+    } else if (cat === 'oil') {
+      items = items.filter(i => i.category === 'Oil');
+    } else if (cat === 'mart') {
+      items = items.filter(i => ['Snack', 'Drink'].includes(i.category));
+    }
+    
+    // Filter by Search
+    if (search) {
+      items = items.filter(i => i.name.toLowerCase().includes(search));
+    }
+    
+    return items;
+  });
+
+  // Filtered Ready Services for POS
+  filteredReadyServices = computed(() => {
+      const search = this.posSearch().toLowerCase();
+      let srvs = this.ws.services().filter(s => s.status === 'ready');
+      
+      if (search) {
+          srvs = srvs.filter(s => 
+              s.plateNumber.toLowerCase().includes(search) || 
+              s.ownerName.toLowerCase().includes(search) || 
+              s.uniqueCode.toLowerCase().includes(search)
+          );
+      }
+      return srvs;
+  });
   
   filteredHistory = computed(() => {
     const search = this.historySearch().toLowerCase();
